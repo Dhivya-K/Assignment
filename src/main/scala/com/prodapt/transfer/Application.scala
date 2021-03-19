@@ -15,6 +15,7 @@ import java.util.Properties
 import scala.collection.JavaConverters._
 import java.io.FileInputStream
 import com.prodapt.transfer.constant.Constant
+import org.apache.log4j.Logger
 
 /**
  * Main Object to parse the URL
@@ -22,50 +23,49 @@ import com.prodapt.transfer.constant.Constant
  */
 
 object Application {
-  
-/**
- * Main Program to run the parsing application
- * @param args
- */
+  val log = Logger.getLogger(getClass.getName)
+
+  /**
+   * Main Program to run the parsing application
+   * @param args
+   */
   def main(args: Array[String]): Unit = {
-    if (args.length < 3) {
+
+    if (args.length < 2) {
+      log.info("Necessary arguments are not found")
+
       throw new Exception("please provide the input and output Directory")
     }
-    try{ 
+
+    try {
       val constant = new Constant()
-    val inputPath = args(1) // Input path
-    val outputPath = args(2) // Output Path
-    val proprtyFilePath = args(0) // Property File
+      val urlParser = new URLParser()
+      val inputPath = args(0) // Input path
+      val outputPath = args(1) // Output Path
 
-    val properties = new Properties
+      log.info("Input Path:" + inputPath)
+      log.info("Output Path:" + outputPath)
 
-    properties.load(new FileInputStream(proprtyFilePath))
+      //      properties.load(new FileInputStream(proprtyFilePath))
 
-    val appName = properties.getProperty(constant.appName)
-    val master = properties.getProperty(constant.master)
-    val spark_driver_host = properties.getProperty(constant.spark_driver_host)
+      val appName = sys.env.getOrElse(constant.appName, "Parser")
+      val master = sys.env.getOrElse(constant.master, "local[*]")
+      val spark_driver_host = sys.env.getOrElse(constant.spark_driver_host, "localhost")
+      
+      log.info("Appname " + appName + "master" + master+ "spark driver host" +  spark_driver_host)
 
-    val conf = new SparkConf().setMaster(master).setAppName(appName).set("spark.driver.host", spark_driver_host)
-    //    val spark = SparkSession.builder.config(conf).getOrCreate()
+      val conf = new SparkConf().setMaster(master).setAppName(appName).set("spark.driver.host", spark_driver_host)
+      val spark = SparkSession.builder.config(conf).getOrCreate()
+      val inputSchema = spark.read.json(getClass.getResource("/input.txt").getPath()).schema
+      val dfStream = spark.readStream
+        .schema(inputSchema).json(inputPath)
+     
+      urlParser.parseMessage(dfStream, outputPath)
 
-    val ssc = new StreamingContext(conf, Seconds(60))
-    println("test after spark initialization")
-    //
-    //    //returns DataFrame
-    //    val sourceDir: String = "file:\\D:\\prodapt\\inuts"
-    val lines = ssc.textFileStream(inputPath)
-    val filterURl = "http://omwssu."
-    val filteredRDD = lines.filter(_.contains(filterURl))
-
-    val urlParser = new URLParser()
-    urlParser.parseMessage(filteredRDD, outputPath)
-
-    ssc.start()
-    ssc.awaitTermination()
-    }catch {
-      case t: Throwable => t.printStackTrace() 
+    } catch {
+      case t: 
+        Throwable => t.printStackTrace()
     }
-  
   }
 
 }

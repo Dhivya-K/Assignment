@@ -1,18 +1,20 @@
 # Assignment
 
-A simple scala application to parse the url from the given text file using spark streaming.
+A simple scala application to parse the url from the given text file using spark structured streaming API.
 
 To Run the application 
 
-spark-submit --class com.prodapt.transfer.Application tranfer.jar-with-dependencies <propertyfile> <inputPath> <OutputPath>
+spark-submit --class com.prodapt.transfer.Application tranfer.jar-with-dependencies <inputPath> <OutputPath>
   
   
-Property file Should have these parameters
+set The below Environmental variables.
 spark.driver.host = localhost
 Master=local[*]
 AppName=transfer
 
-change accordingly based on the configuration
+change the above accordingly based on the configuration
+
+
 
 Prerequisites :
 

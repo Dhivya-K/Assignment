@@ -17,4 +17,7 @@ class Constant {
           val front_slash = "/"
           val dot = "."
           val timestamp_source = "yyyy-MM-dd HH:mm:ss"
+          val outputMode = "Append"
+          val checkpointLocation = "checkpoint"
+          val numPartition = 1
 }
